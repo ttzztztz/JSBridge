@@ -11,7 +11,7 @@ const callbackMap: {
   [key: number]: CallBackType | undefined
 } = {};
 
-export const invoke = (method: string, args: any, callback?: CallBackType) => {
+function invoke(method: string, args: any, callback?: CallBackType) {
   let currentCallbackId : undefined | number = undefined;
   if (callback) {
     currentCallbackId = ++callBackIncrementId
@@ -20,7 +20,7 @@ export const invoke = (method: string, args: any, callback?: CallBackType) => {
   RabbitJSBridge.invoke(method, args, currentCallbackId);  
 }
 
-export const callback = (cbId: number, data: any) => {
+function RabbitBridgeCallback(cbId: number, data: any) {
   const cb = callbackMap[cbId];
   if (cb) {
     cb(data);
