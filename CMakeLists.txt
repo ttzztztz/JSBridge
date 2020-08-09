@@ -3,7 +3,8 @@ project(JSCore)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(JSCore main.cpp)
+aux_source_directory(${PROJECT_SOURCE_DIR}/src SRC_LIST)
+add_executable(JSCore ${SRC_LIST})
 
 target_link_libraries(JSCore
         "-framework Foundation"
