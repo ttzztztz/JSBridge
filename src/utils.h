@@ -8,13 +8,16 @@
 #include <JavaScriptCore/JavaScriptCore.h>
 
 #include "methods.h"
+#include "engine.h"
 
 class utils {
 public:
     static JSObjectRef make_object(JSContextRef ctx, const std::string& className,
                                    const std::unordered_map<std::string, JSValueRef>& data);
 
-    static void evaluateScripts(JSContextRef ctx, const std::string& fileName);
+    static JSValueRef evaluateScriptsFromFile(JSContextRef ctx, const std::string& fileName);
+
+    static JSValueRef evaluateScriptsFromString(JSContextRef ctx, const std::string& codes);
 
     static JSObjectRef generateJSBridgeObject(JSContextRef ctx);
 
@@ -22,15 +25,15 @@ public:
             JSObjectRef thisObject, size_t argumentCount,
             const JSValueRef arguments[], JSValueRef *exception);
 
-    static void callback(JSValueRef cbId, JSObjectRef data);
+    static void callback(JSContextRef ctx, JSValueRef cbId, JSObjectRef data);
 
     static JSObjectRef generateConsoleObject(JSContextRef ctx);
 
     static std::string JSStringToStdString(JSContextRef ctx, JSValueRef value);
 
-    static void utils::createMethodInObject(JSContextRef ctx, JSObjectRef target_object,
+    static void createMethodInObject(JSContextRef ctx, JSObjectRef obj,
                                             const std::string& name,
-                                            JSObjectCallAsFunctionCallback method)
+                                            JSObjectCallAsFunctionCallback method);
 };
 
 

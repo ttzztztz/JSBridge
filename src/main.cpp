@@ -1,28 +1,30 @@
 #include <iostream>
 #include <JavaScriptCore/JavaScriptCore.h>
-#include <memory>
 
 #include "./engine.h"
 #include "utils.h"
 
 int main(int argc, const char *argv[]) {
-    std::shared_ptr<engine> ctx(new engine());
+    engine engineContext;
 
-    JSObjectSetProperty(ctx->globalContext, ctx->globalObject,
+    JSObjectSetProperty(engineContext.globalContext, engineContext.globalObject,
                         JSStringCreateWithUTF8CString("RabbitJSBridge"),
-                        utils::generateJSBridgeObject(ctx->globalContext),
+                        utils::generateJSBridgeObject(engineContext.globalContext),
                         kJSPropertyAttributeNone, nullptr);
 
-    JSObjectSetProperty(ctx->globalContext, ctx->globalObject,
+    JSObjectSetProperty(engineContext.globalContext, engineContext.globalObject,
                         JSStringCreateWithUTF8CString("console"),
-                        utils::generateConsoleObject(ctx->globalContext),
+                        utils::generateConsoleObject(engineContext.globalContext),
                         kJSPropertyAttributeNone, nullptr);
+
 
     // js bridge
-    utils::evaluateScripts(ctx->globalContext, "./javascript/jsbridge.js");
+    utils::evaluateScriptsFromFile(engineContext.globalContext,
+                                   "./javascript/jsbridge.js");
 
     // main codes
-    utils::evaluateScripts(ctx->globalContext, "./javascript/main.js");
+    utils::evaluateScriptsFromFile(engineContext.globalContext,
+                                   "./javascript/main.js");
 
     return 0;
 }

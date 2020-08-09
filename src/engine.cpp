@@ -11,6 +11,4 @@ engine::engine() {
 engine::~engine() {
     JSGlobalContextRelease(this->globalContext);
     JSContextGroupRelease(this->group);
-
-    std::cout << "released" << std::endl;
 }

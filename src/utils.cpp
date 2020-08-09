@@ -18,30 +18,21 @@ JSObjectRef utils::make_object(JSContextRef ctx, const std::string &className,
     return obj;
 }
 
-void utils::evaluateScripts(JSContextRef ctx, const std::string &fileName) {
+JSValueRef utils::evaluateScriptsFromFile(JSContextRef ctx, const std::string &fileName) {
     std::fstream fs(fileName.c_str());
     std::stringstream ss;
     ss << fs.rdbuf();
-    std::string jsBridgeCodes(ss.str());
+    std::string codes(ss.str());
     fs.close();
     ss.clear();
 
-    JSStringRef statement = JSStringCreateWithUTF8CString(jsBridgeCodes.c_str());
-    JSEvaluateScript(ctx, statement,
-                     nullptr, nullptr,
-                     1, nullptr);
-
-    JSStringRelease(statement);
+    return utils::evaluateScriptsFromString(ctx, codes);
 }
 
 JSObjectRef utils::generateJSBridgeObject(JSContextRef ctx) {
-    std::unordered_map<std::string, JSValueRef> objs;
-    JSStringRef invokeFunctionName = JSStringCreateWithUTF8CString("invoke");
-    JSObjectRef invokeObject =
-            JSObjectMakeFunctionWithCallback(ctx, invokeFunctionName, &utils::invoke);
-    objs["invoke"] = invokeObject;
-
-    return utils::make_object(ctx, "RabbitJSBridgeClass", objs);
+    auto obj = utils::make_object(ctx, "RabbitJSBridgeClass", std::unordered_map<std::string, JSValueRef>());
+    utils::createMethodInObject(ctx, obj, "invoke", &utils::invoke);
+    return obj;
 }
 
 JSValueRef utils::invoke(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount,
@@ -53,17 +44,29 @@ JSValueRef utils::invoke(JSContextRef ctx, JSObjectRef function, JSObjectRef thi
         std::string cb = methods::StdinFunction(ctx, args);
         if (JSValueIsNumber(ctx, arguments[2])) {
             std::unordered_map<std::string, JSValueRef> res;
-            res["data"] = (JSValueRef) JSStringCreateWithUTF8CString(cb.c_str());
-            JSObjectRef messageObject = utils::make_object(ctx, "messageObject", res);
-            callback(arguments[2], messageObject);
+            res["data"] = (JSObjectRef) JSStringCreateWithUTF8CString(cb.c_str());
+
+            JSObjectRef messageObject = utils::make_object(ctx, "Object", res);
+            callback(ctx, arguments[2], messageObject);
         }
     }
 
     return JSValueMakeUndefined(ctx);
 }
 
-void utils::callback(JSValueRef cbId, JSObjectRef data) {
+void utils::callback(JSContextRef ctx, JSValueRef cbId, JSObjectRef data) {
+    JSValueRef callbackObjValue = JSObjectGetProperty(ctx, globalObject,
+                                           JSStringCreateWithUTF8CString("RabbitBridgeCallback")
+                                           , nullptr);
 
+    JSObjectRef callbackObj = JSValueToObject(ctx, callbackObjValue, nullptr);
+    if (JSObjectIsFunction(ctx, callbackObj)) {
+        JSValueRef arguments[] = {
+                cbId,
+                data
+        };
+        JSObjectCallAsFunction(ctx, callbackObj, nullptr, 2, arguments, nullptr);
+    }
 }
 
 JSObjectRef utils::generateConsoleObject(JSContextRef ctx) {
@@ -125,13 +128,23 @@ std::string utils::JSStringToStdString(JSContextRef ctx, JSValueRef value) {
 }
 
 void utils::createMethodInObject(JSContextRef ctx,
-                          JSObjectRef target_object,
+                          JSObjectRef obj,
                           const std::string& name,
                           JSObjectCallAsFunctionCallback method) {
     JSStringRef function_name = JSStringCreateWithUTF8CString(name.c_str());
     JSObjectRef function_object =
             JSObjectMakeFunctionWithCallback(ctx, function_name, method);
-    JSObjectSetProperty(ctx, target_object, function_name, function_object,
+    JSObjectSetProperty(ctx, obj, function_name, function_object,
                         kJSPropertyAttributeNone, nullptr);
     JSStringRelease(function_name);
+}
+
+JSValueRef utils::evaluateScriptsFromString(JSContextRef ctx, const std::string &codes) {
+    JSStringRef statement = JSStringCreateWithUTF8CString(codes.c_str());
+    JSValueRef res = JSEvaluateScript(ctx, statement,
+                                      nullptr, nullptr,
+                                      1, nullptr);
+
+    JSStringRelease(statement);
+    return res;
 }

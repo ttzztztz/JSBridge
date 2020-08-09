@@ -16,6 +16,9 @@ const Rabbit = {
 };
 
 // ... developer codes ...
+
+console.log(RabbitJSBridge.invoke.toString());
 Rabbit.Stdin('Input something...', ({ data }) => {
-  console.log('Get response! ', data)
+  console.log('Get response!');
+  console.log(data);
 });
