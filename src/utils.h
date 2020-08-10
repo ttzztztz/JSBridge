@@ -5,6 +5,8 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <functional>
+#include <any>
 #include <JavaScriptCore/JavaScriptCore.h>
 
 #include "methods.h"

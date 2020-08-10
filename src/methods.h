@@ -9,7 +9,8 @@
 
 class methods {
 public:
-    static std::string StdinSyncFunction(JSContextRef ctx, JSObjectRef args);
+    static JSObjectRef StdinSyncFunction(JSContextRef ctx, JSObjectRef args);
+    static JSObjectRef ReadFileFunction(JSContextRef ctx, JSObjectRef args);
 };
 
 

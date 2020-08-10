@@ -1,5 +1,12 @@
 #include "utils.h"
 
+typedef std::function<JSObjectRef(JSContextRef, JSObjectRef)> JSBridgeMethod;
+
+std::unordered_map<std::string, JSBridgeMethod> functions = {
+        {std::string{"StdinSync"}, methods::StdinSyncFunction},
+        {std::string{"ReadFile"}, methods::ReadFileFunction}
+};
+
 JSObjectRef utils::make_object(JSContextRef ctx, const std::string &className,
                                const std::unordered_map<std::string, JSValueRef> &data) {
     JSClassDefinition definition = kJSClassDefinitionEmpty;
@@ -37,20 +44,15 @@ JSObjectRef utils::generateJSBridgeObject(JSContextRef ctx) {
 
 JSValueRef utils::invoke(JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount,
                          const JSValueRef *arguments, JSValueRef *exception) {
-    const auto methodName = (JSStringRef) arguments[0];
     const auto args = (JSObjectRef) arguments[1];
 
-    if (JSStringIsEqual(methodName, JSStringCreateWithUTF8CString("StdinSync"))) {
-        std::string cb = methods::StdinSyncFunction(ctx, args);
-        std::unordered_map<std::string, JSValueRef> res;
-
-        JSStringRef data = JSStringCreateWithUTF8CString(cb.c_str());
-        res["data"] = JSValueMakeString(ctx, data);
-        JSObjectRef messageObject = utils::make_object(ctx, "Object", res);
-        return messageObject;
+    std::string methodName = utils::JSStringToStdString(ctx, arguments[0]);
+    if (functions.count(methodName)) {
+        JSObjectRef res = functions[methodName](ctx, args);
+        return res;
+    } else {
+        return JSValueMakeUndefined(ctx);
     }
-
-    return JSValueMakeUndefined(ctx);
 }
 
 void utils::callback(JSContextRef ctx, JSValueRef cbId, JSObjectRef data) {
