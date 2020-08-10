@@ -1,24 +1,18 @@
 // ... app library ...
 const Rabbit = {
-  Stdin(message: string, cb?: (args: { data: string }) => void) {
-    invoke('Stdin', {
+  StdinSync(message: string) : { data: string; } {
+    return invoke('StdinSync', {
       message
-    }, cb);
-  },
-
-  StdinPromised(message: string) {
-    return new Promise(res => {
-      Rabbit.Stdin(message, (data) => {
-        res(data);
-      });
     });
   }
 };
 
 // ... developer codes ...
 
-console.log(RabbitJSBridge.invoke.toString());
-Rabbit.Stdin('Input something...', ({ data }) => {
-  console.log('Get response!');
-  console.log(data);
-});
+const { data } = Rabbit.StdinSync("Input something...")
+console.log('Get Response!');
+console.log(data);
+// Rabbit.Stdin('Input something...', ({ data }) => {
+//   console.log('Get response!');
+//   console.log(data);
+// });

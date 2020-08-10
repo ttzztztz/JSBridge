@@ -9,7 +9,7 @@
 
 class methods {
 public:
-    static std::string StdinFunction(JSContextRef ctx, JSObjectRef args);
+    static std::string StdinSyncFunction(JSContextRef ctx, JSObjectRef args);
 };
 
 

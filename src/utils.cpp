@@ -40,33 +40,32 @@ JSValueRef utils::invoke(JSContextRef ctx, JSObjectRef function, JSObjectRef thi
     const auto methodName = (JSStringRef) arguments[0];
     const auto args = (JSObjectRef) arguments[1];
 
-    if (JSStringIsEqual(methodName, JSStringCreateWithUTF8CString("Stdin"))) {
-        std::string cb = methods::StdinFunction(ctx, args);
-        if (JSValueIsNumber(ctx, arguments[2])) {
-            std::unordered_map<std::string, JSValueRef> res;
-            res["data"] = (JSObjectRef) JSStringCreateWithUTF8CString(cb.c_str());
+    if (JSStringIsEqual(methodName, JSStringCreateWithUTF8CString("StdinSync"))) {
+        std::string cb = methods::StdinSyncFunction(ctx, args);
+        std::unordered_map<std::string, JSValueRef> res;
 
-            JSObjectRef messageObject = utils::make_object(ctx, "Object", res);
-            callback(ctx, arguments[2], messageObject);
-        }
+        JSStringRef data = JSStringCreateWithUTF8CString(cb.c_str());
+        res["data"] = JSValueMakeString(ctx, data);
+        JSObjectRef messageObject = utils::make_object(ctx, "Object", res);
+        return messageObject;
     }
 
     return JSValueMakeUndefined(ctx);
 }
 
 void utils::callback(JSContextRef ctx, JSValueRef cbId, JSObjectRef data) {
-    JSValueRef callbackObjValue = JSObjectGetProperty(ctx, globalObject,
-                                           JSStringCreateWithUTF8CString("RabbitBridgeCallback")
-                                           , nullptr);
-
-    JSObjectRef callbackObj = JSValueToObject(ctx, callbackObjValue, nullptr);
-    if (JSObjectIsFunction(ctx, callbackObj)) {
-        JSValueRef arguments[] = {
-                cbId,
-                data
-        };
-        JSObjectCallAsFunction(ctx, callbackObj, nullptr, 2, arguments, nullptr);
-    }
+//    JSValueRef callbackObjValue = JSObjectGetProperty(ctx, globalObject,
+//                                           JSStringCreateWithUTF8CString("RabbitBridgeCallback")
+//                                           , nullptr);
+//
+//    JSObjectRef callbackObj = JSValueToObject(ctx, callbackObjValue, nullptr);
+//    if (JSObjectIsFunction(ctx, callbackObj)) {
+//        JSValueRef arguments[] = {
+//                cbId,
+//                data
+//        };
+//        JSObjectCallAsFunction(ctx, callbackObj, nullptr, 2, arguments, nullptr);
+//    }
 }
 
 JSObjectRef utils::generateConsoleObject(JSContextRef ctx) {

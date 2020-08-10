@@ -1,5 +1,5 @@
 interface IRabbitJSBridge {
-  invoke: (method: string, args: any, callbackId?: number) => void;
+  invoke: (method: string, args: any, callbackId?: number) => any;
 }
 
 declare const RabbitJSBridge: IRabbitJSBridge;
@@ -17,7 +17,7 @@ function invoke(method: string, args: any, callback?: CallBackType) {
     currentCallbackId = ++callBackIncrementId
     callbackMap[currentCallbackId] = callback
   }
-  RabbitJSBridge.invoke(method, args, currentCallbackId);  
+  return RabbitJSBridge.invoke(method, args, currentCallbackId);  
 }
 
 function RabbitBridgeCallback(cbId: number, data: any) {
