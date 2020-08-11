@@ -7,9 +7,10 @@
 #include "block_queue.h"
 
 engine engineContext;
+block_queue<std::function<void()>> taskQueue;
 
 [[noreturn]]
-void executeLoop(block_queue<std::string>& taskQueue) {
+void executeLoop() {
     JSObjectSetProperty(engineContext.globalContext, engineContext.globalObject,
                         JSStringCreateWithUTF8CString("RabbitJSBridge"),
                         utils::generateJSBridgeObject(engineContext.globalContext),
@@ -30,16 +31,14 @@ void executeLoop(block_queue<std::string>& taskQueue) {
                                    "./javascript/main.js");
 
     while (true) {
-        std::string scripts = std::move(taskQueue.pop());
-        utils::evaluateScriptsFromString(engineContext.globalContext,
-                                         scripts);
+        std::function<void()> func = taskQueue.pop();
+        func();
     }
 }
 
 int main() {
-    block_queue<std::string> taskQueue;
     std::thread executeThread([&]() -> void {
-        executeLoop(taskQueue);
+        executeLoop();
     });
     executeThread.join();
     return 0;

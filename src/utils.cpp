@@ -63,11 +63,13 @@ void utils::callback(JSContextRef ctx, JSValueRef cbId, JSObjectRef data) {
 
     JSObjectRef callbackObj = JSValueToObject(ctx, callbackObjValue, nullptr);
     if (JSObjectIsFunction(ctx, callbackObj)) {
-        JSValueRef arguments[] = {
-                cbId,
-                data
-        };
-        JSObjectCallAsFunction(ctx, callbackObj, nullptr, 2, arguments, nullptr);
+        taskQueue.push([=]() -> void {
+            JSValueRef arguments[] = {
+                    cbId,
+                    data
+            };
+            JSObjectCallAsFunction(ctx, callbackObj, nullptr, 2, arguments, nullptr);
+        });
     }
 }
 

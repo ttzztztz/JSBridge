@@ -10,8 +10,10 @@
 
 #include "methods.h"
 #include "engine.h"
+#include "block_queue.h"
 
 extern engine engineContext;
+extern block_queue<std::function<void()>> taskQueue;
 
 class utils {
 public:
