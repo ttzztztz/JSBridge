@@ -1,16 +1,27 @@
 #include "methods.h"
 
-JSObjectRef methods::StdinSyncFunction(JSContextRef ctx, JSObjectRef args) {
-    static std::mutex mu;
-    const std::unique_lock<std::mutex> guard(mu);
+std::mutex iosMutex;
 
+void methods::StdOutCore(const std::string &message) {
+    const std::unique_lock<std::mutex> guard(iosMutex);
+    std::cout << message << std::endl;
+}
+
+std::string methods::StdInCore() {
+    const std::unique_lock<std::mutex> guard(iosMutex);
+    std::string tmp;
+    std::cin >> tmp;
+
+    return std::move(tmp);
+}
+
+JSObjectRef methods::StdinSyncFunction(JSContextRef ctx, JSObjectRef args, const JSValueRef *arguments) {
     JSValueRef str = JSObjectGetProperty(ctx, args, JSStringCreateWithUTF8CString("message"), nullptr);
 
     std::string buf = utils::JSStringToStdString(ctx, str);
-    std::cout << buf << std::endl;
 
-    std::string tmp;
-    std::cin >> tmp;
+    methods::StdOutCore(buf);
+    std::string tmp = methods::StdInCore();
 
     std::unordered_map<std::string, JSValueRef> res;
     JSStringRef data = JSStringCreateWithUTF8CString(tmp.c_str());
@@ -19,7 +30,28 @@ JSObjectRef methods::StdinSyncFunction(JSContextRef ctx, JSObjectRef args) {
     return messageObject;
 }
 
-JSObjectRef methods::ReadFileFunction(JSContextRef ctx, JSObjectRef args) {
+JSObjectRef methods::StdinFunction(JSContextRef ctx, JSObjectRef args, const JSValueRef *arguments) {
+    const auto callbackId = arguments[2];
+    JSValueRef str = JSObjectGetProperty(ctx, args, JSStringCreateWithUTF8CString("message"), nullptr);
+    std::string buf = utils::JSStringToStdString(ctx, str);
+    methods::StdOutCore(buf);
+
+    std::thread t([=]() -> void {
+        std::string tmp = methods::StdInCore();
+
+        std::unordered_map<std::string, JSValueRef> res;
+        JSStringRef data = JSStringCreateWithUTF8CString(tmp.c_str());
+        res["data"] = JSValueMakeString(ctx, data);
+        JSObjectRef messageObject = utils::make_object(ctx, "Object", res);
+
+        utils::callback(ctx, callbackId, messageObject);
+    });
+    t.detach();
+
+    return utils::make_object(ctx, "Object", std::unordered_map<std::string, JSValueRef>());
+}
+
+JSObjectRef methods::ReadFileFunction(JSContextRef ctx, JSObjectRef args, const JSValueRef *arguments) {
     JSValueRef str = JSObjectGetProperty(ctx, args, JSStringCreateWithUTF8CString("message"), nullptr);
 
     std::string buf = "resources/" + utils::JSStringToStdString(ctx, str);

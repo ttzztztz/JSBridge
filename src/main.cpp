@@ -6,10 +6,10 @@
 #include "utils.h"
 #include "block_queue.h"
 
+engine engineContext;
+
 [[noreturn]]
 void executeLoop(block_queue<std::string>& taskQueue) {
-    engine engineContext;
-
     JSObjectSetProperty(engineContext.globalContext, engineContext.globalObject,
                         JSStringCreateWithUTF8CString("RabbitJSBridge"),
                         utils::generateJSBridgeObject(engineContext.globalContext),
@@ -42,6 +42,5 @@ int main() {
         executeLoop(taskQueue);
     });
     executeThread.join();
-    
     return 0;
 }

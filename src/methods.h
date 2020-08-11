@@ -4,14 +4,20 @@
 #include <string>
 #include <iostream>
 #include <mutex>
+#include <thread>
+
 #include <JavaScriptCore/JavaScriptCore.h>
 
 #include "utils.h"
 
 class methods {
 public:
-    static JSObjectRef StdinSyncFunction(JSContextRef ctx, JSObjectRef args);
-    static JSObjectRef ReadFileFunction(JSContextRef ctx, JSObjectRef args);
+    static JSObjectRef StdinSyncFunction(JSContextRef ctx, JSObjectRef args, const JSValueRef *arguments);
+    static JSObjectRef StdinFunction(JSContextRef ctx, JSObjectRef args, const JSValueRef *arguments);
+    static JSObjectRef ReadFileFunction(JSContextRef ctx, JSObjectRef args, const JSValueRef *arguments);
+private:
+    static void StdOutCore(const std::string& message);
+    static std::string StdInCore();
 };
 
 

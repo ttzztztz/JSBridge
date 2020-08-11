@@ -11,6 +11,8 @@
 #include "methods.h"
 #include "engine.h"
 
+extern engine engineContext;
+
 class utils {
 public:
     static JSObjectRef make_object(JSContextRef ctx, const std::string& className,
