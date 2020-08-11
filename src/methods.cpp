@@ -1,6 +1,9 @@
 #include "methods.h"
 
 JSObjectRef methods::StdinSyncFunction(JSContextRef ctx, JSObjectRef args) {
+    static std::mutex mu;
+    const std::unique_lock<std::mutex> guard(mu);
+
     JSValueRef str = JSObjectGetProperty(ctx, args, JSStringCreateWithUTF8CString("message"), nullptr);
 
     std::string buf = utils::JSStringToStdString(ctx, str);
