@@ -4,7 +4,7 @@ interface IRabbitJSBridge {
 
 declare const RabbitJSBridge: IRabbitJSBridge;
 
-type CallBackType = (data: any) => void;
+type CallBackType = (args: any) => void;
 
 let callBackIncrementId: number = 0;
 const callbackMap: {
@@ -26,4 +26,37 @@ function RabbitBridgeCallback(cbId: number, data: any) {
     delete callbackMap[cbId]; // in case of memory leak
     cb(data);
   }
+}
+
+const subscribes: {
+  [key: string] : {
+    id: number;
+    callback: CallBackType;
+  }[] | undefined;
+} = {};
+
+function subscribe(method: string, cb: CallBackType) {
+  const currentId = ++callBackIncrementId;
+  
+  const obj = {
+    id: currentId,
+    callback: cb
+  }
+
+  if (subscribes[method]) {
+    subscribes[method]!.push(obj);
+  } else {
+    subscribes[method] = [obj];
+  }
+
+  const unsubscribe = () => {
+    if (subscribes[method]) {
+      subscribes[method] = subscribes[method]?.filter(item => item.id !== currentId);
+    }
+  }
+  return unsubscribe;
+}
+
+function triggerEvent(method: string, data: any) {
+  subscribes[method]?.forEach(cb => cb.callback(data));
 }
