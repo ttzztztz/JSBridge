@@ -23,7 +23,7 @@ function invoke(method: string, args: any, callback?: CallBackType) {
 function RabbitBridgeCallback(cbId: number, data: any) {
   const cb = callbackMap[cbId];
   if (cb) {
-    cb(data);
     delete callbackMap[cbId]; // in case of memory leak
+    cb(data);
   }
 }
