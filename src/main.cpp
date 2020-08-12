@@ -22,13 +22,22 @@ void executeLoop() {
                         kJSPropertyAttributeNone, nullptr);
 
 
-    // js bridge
+    // js bridge inject
     utils::evaluateScriptsFromFile(engineContext.globalContext,
                                    "./javascript/jsbridge.js");
 
-    // main codes
+    // lib inject
     utils::evaluateScriptsFromFile(engineContext.globalContext,
-                                   "./javascript/main.js");
+                                   "./javascript/lib.js");
+
+    utils::triggerEvent(engineContext.globalContext,
+                        "onLaunch",
+                        methods::launchEvent(engineContext.globalContext, time(nullptr)));
+
+    taskQueue.push([&]() -> void {
+        utils::evaluateScriptsFromFile(engineContext.globalContext,
+                                       "./javascript/main.js");
+    });
 
     while (true) {
         std::function<void()> func = taskQueue.pop();

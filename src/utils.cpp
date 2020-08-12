@@ -152,3 +152,20 @@ JSValueRef utils::evaluateScriptsFromString(JSContextRef ctx, const std::string 
     JSStringRelease(statement);
     return res;
 }
+
+void utils::triggerEvent(JSContextRef ctx, const std::string& eventName, JSObjectRef data) {
+    JSValueRef callbackObjValue = JSObjectGetProperty(ctx, engineContext.globalObject,
+                                                      JSStringCreateWithUTF8CString("triggerEvent")
+                                                    , nullptr);
+
+    JSObjectRef callbackObj = JSValueToObject(ctx, callbackObjValue, nullptr);
+    if (JSObjectIsFunction(ctx, callbackObj)) {
+        taskQueue.push([=]() -> void {
+            JSValueRef arguments[] = {
+                    JSValueMakeString(engineContext.globalContext, JSStringCreateWithUTF8CString(eventName.c_str())),
+                    data
+            };
+            JSObjectCallAsFunction(ctx, callbackObj, nullptr, 2, arguments, nullptr);
+        });
+    }
+}

@@ -32,6 +32,8 @@ public:
 
     static void callback(JSContextRef ctx, JSValueRef cbId, JSObjectRef data);
 
+    static void triggerEvent(JSContextRef ctx, const std::string& eventName, JSObjectRef data);
+
     static JSObjectRef generateConsoleObject(JSContextRef ctx);
 
     static std::string JSStringToStdString(JSContextRef ctx, JSValueRef value);

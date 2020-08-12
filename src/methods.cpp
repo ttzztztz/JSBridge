@@ -75,3 +75,11 @@ JSObjectRef methods::ReadFileFunction(JSContextRef ctx, JSObjectRef args, const 
     JSObjectRef messageObject = utils::make_object(ctx, "Object", res);
     return messageObject;
 }
+
+JSObjectRef methods::launchEvent(JSContextRef ctx, time_t timestamp) {
+    std::unordered_map<std::string, JSValueRef> res;
+    res["timestamp"] = JSValueMakeNumber(ctx, timestamp);
+    JSObjectRef messageObject = utils::make_object(ctx, "Object", res);
+
+    return messageObject;
+}
