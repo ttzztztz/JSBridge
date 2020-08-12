@@ -10,6 +10,7 @@
 
 #include "methods.h"
 #include "engine.h"
+#include "SafeJSString.h"
 #include "block_queue.h"
 
 extern engine engineContext;

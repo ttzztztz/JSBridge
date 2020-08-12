@@ -16,7 +16,7 @@ std::string methods::StdInCore() {
 }
 
 JSObjectRef methods::StdinSyncFunction(JSContextRef ctx, JSObjectRef args, const JSValueRef *arguments) {
-    JSValueRef str = JSObjectGetProperty(ctx, args, JSStringCreateWithUTF8CString("message"), nullptr);
+    JSValueRef str = JSObjectGetProperty(ctx, args, *SafeJSString("message"), nullptr);
 
     std::string buf = utils::JSStringToStdString(ctx, str);
 
@@ -24,15 +24,15 @@ JSObjectRef methods::StdinSyncFunction(JSContextRef ctx, JSObjectRef args, const
     std::string tmp = methods::StdInCore();
 
     std::unordered_map<std::string, JSValueRef> res;
-    JSStringRef data = JSStringCreateWithUTF8CString(tmp.c_str());
-    res["data"] = JSValueMakeString(ctx, data);
+    SafeJSString data(tmp.c_str());
+    res["data"] = JSValueMakeString(ctx, *data);
     JSObjectRef messageObject = utils::make_object(ctx, "Object", res);
     return messageObject;
 }
 
 JSObjectRef methods::StdinFunction(JSContextRef ctx, JSObjectRef args, const JSValueRef *arguments) {
     const auto callbackId = arguments[2];
-    JSValueRef str = JSObjectGetProperty(ctx, args, JSStringCreateWithUTF8CString("message"), nullptr);
+    JSValueRef str = JSObjectGetProperty(ctx, args, *SafeJSString("message"), nullptr);
     std::string buf = utils::JSStringToStdString(ctx, str);
     methods::StdOutCore(buf);
 
@@ -40,8 +40,8 @@ JSObjectRef methods::StdinFunction(JSContextRef ctx, JSObjectRef args, const JSV
         std::string tmp = methods::StdInCore();
 
         std::unordered_map<std::string, JSValueRef> res;
-        JSStringRef data = JSStringCreateWithUTF8CString(tmp.c_str());
-        res["data"] = JSValueMakeString(ctx, data);
+        SafeJSString data(tmp.c_str());
+        res["data"] = JSValueMakeString(ctx, *data);
         JSObjectRef messageObject = utils::make_object(ctx, "Object", res);
 
         utils::callback(ctx, callbackId, messageObject);
@@ -52,7 +52,7 @@ JSObjectRef methods::StdinFunction(JSContextRef ctx, JSObjectRef args, const JSV
 }
 
 JSObjectRef methods::ReadFileFunction(JSContextRef ctx, JSObjectRef args, const JSValueRef *arguments) {
-    JSValueRef str = JSObjectGetProperty(ctx, args, JSStringCreateWithUTF8CString("message"), nullptr);
+    JSValueRef str = JSObjectGetProperty(ctx, args, *SafeJSString("message"), nullptr);
 
     std::string buf = "resources/" + utils::JSStringToStdString(ctx, str);
 
@@ -64,8 +64,8 @@ JSObjectRef methods::ReadFileFunction(JSContextRef ctx, JSObjectRef args, const 
         std::string all(ss.str());
 
         std::unordered_map<std::string, JSValueRef> res;
-        JSStringRef data = JSStringCreateWithUTF8CString(all.c_str());
-        res["data"] = JSValueMakeString(ctx, data);
+        SafeJSString data(all.c_str());
+        res["data"] = JSValueMakeString(ctx, *data);
         JSObjectRef messageObject = utils::make_object(ctx, "Object", res);
         return messageObject;
     }

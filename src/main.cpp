@@ -2,9 +2,10 @@
 #include <JavaScriptCore/JavaScriptCore.h>
 #include <thread>
 
-#include "./engine.h"
+#include "engine.h"
 #include "utils.h"
 #include "block_queue.h"
+#include "SafeJSString.h"
 
 engine engineContext;
 block_queue<std::function<void()>> taskQueue;
@@ -12,12 +13,12 @@ block_queue<std::function<void()>> taskQueue;
 [[noreturn]]
 void executeLoop() {
     JSObjectSetProperty(engineContext.globalContext, engineContext.globalObject,
-                        JSStringCreateWithUTF8CString("RabbitJSBridge"),
+                        *SafeJSString("RabbitJSBridge"),
                         utils::generateJSBridgeObject(engineContext.globalContext),
                         kJSPropertyAttributeNone, nullptr);
 
     JSObjectSetProperty(engineContext.globalContext, engineContext.globalObject,
-                        JSStringCreateWithUTF8CString("console"),
+                        *SafeJSString("console"),
                         utils::generateConsoleObject(engineContext.globalContext),
                         kJSPropertyAttributeNone, nullptr);
 
@@ -50,5 +51,6 @@ int main() {
         executeLoop();
     });
     executeThread.join();
+
     return 0;
 }

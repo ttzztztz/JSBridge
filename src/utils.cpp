@@ -18,7 +18,7 @@ JSObjectRef utils::make_object(JSContextRef ctx, const std::string &className,
 
     for (auto &p : data) {
         JSObjectSetProperty(ctx, obj,
-                            JSStringCreateWithUTF8CString(p.first.c_str()),
+                            *SafeJSString(p.first.c_str()),
                             p.second,
                             kJSPropertyAttributeNone, nullptr);
     }
@@ -58,8 +58,8 @@ JSValueRef utils::invoke(JSContextRef ctx, JSObjectRef function, JSObjectRef thi
 
 void utils::callback(JSContextRef ctx, JSValueRef cbId, JSObjectRef data) {
     JSValueRef callbackObjValue = JSObjectGetProperty(ctx, engineContext.globalObject,
-                                           JSStringCreateWithUTF8CString("RabbitBridgeCallback")
-                                           , nullptr);
+                                                      *SafeJSString("RabbitBridgeCallback"),
+                                                      nullptr);
 
     JSObjectRef callbackObj = JSValueToObject(ctx, callbackObjValue, nullptr);
     if (JSObjectIsFunction(ctx, callbackObj)) {
@@ -135,34 +135,32 @@ void utils::createMethodInObject(JSContextRef ctx,
                           JSObjectRef obj,
                           const std::string& name,
                           JSObjectCallAsFunctionCallback method) {
-    JSStringRef function_name = JSStringCreateWithUTF8CString(name.c_str());
+    SafeJSString function_name(name.c_str());
     JSObjectRef function_object =
-            JSObjectMakeFunctionWithCallback(ctx, function_name, method);
-    JSObjectSetProperty(ctx, obj, function_name, function_object,
+            JSObjectMakeFunctionWithCallback(ctx, *function_name, method);
+    JSObjectSetProperty(ctx, obj, *function_name, function_object,
                         kJSPropertyAttributeNone, nullptr);
-    JSStringRelease(function_name);
 }
 
 JSValueRef utils::evaluateScriptsFromString(JSContextRef ctx, const std::string &codes) {
-    JSStringRef statement = JSStringCreateWithUTF8CString(codes.c_str());
-    JSValueRef res = JSEvaluateScript(ctx, statement,
+    SafeJSString statement(codes.c_str());
+    JSValueRef res = JSEvaluateScript(ctx, *statement,
                                       nullptr, nullptr,
                                       1, nullptr);
-
-    JSStringRelease(statement);
     return res;
 }
 
 void utils::triggerEvent(JSContextRef ctx, const std::string& eventName, JSObjectRef data) {
     JSValueRef callbackObjValue = JSObjectGetProperty(ctx, engineContext.globalObject,
-                                                      JSStringCreateWithUTF8CString("triggerEvent")
+                                                      *SafeJSString("triggerEvent")
                                                     , nullptr);
 
     JSObjectRef callbackObj = JSValueToObject(ctx, callbackObjValue, nullptr);
     if (JSObjectIsFunction(ctx, callbackObj)) {
         taskQueue.push([=]() -> void {
+            SafeJSString eventNameRef(eventName.c_str());
             JSValueRef arguments[] = {
-                    JSValueMakeString(engineContext.globalContext, JSStringCreateWithUTF8CString(eventName.c_str())),
+                    JSValueMakeString(engineContext.globalContext, *eventNameRef),
                     data
             };
             JSObjectCallAsFunction(ctx, callbackObj, nullptr, 2, arguments, nullptr);

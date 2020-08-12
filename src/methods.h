@@ -9,6 +9,7 @@
 #include <JavaScriptCore/JavaScriptCore.h>
 
 #include "utils.h"
+#include "SafeJSString.h"
 
 class methods {
 public:
