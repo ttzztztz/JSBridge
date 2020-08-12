@@ -15,7 +15,7 @@ class methods {
 public:
     static JSObjectRef StdinSyncFunction(JSContextRef ctx, JSObjectRef args, const JSValueRef *arguments);
     static JSObjectRef StdinFunction(JSContextRef ctx, JSObjectRef args, const JSValueRef *arguments);
-    static JSObjectRef ReadFileFunction(JSContextRef ctx, JSObjectRef args, const JSValueRef *arguments);
+    static JSObjectRef ReadFileSyncFunction(JSContextRef ctx, JSObjectRef args, const JSValueRef *arguments);
 
     static JSObjectRef launchEvent(JSContextRef ctx, time_t timestamp);
 private:

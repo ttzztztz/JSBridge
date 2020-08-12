@@ -51,21 +51,30 @@ JSObjectRef methods::StdinFunction(JSContextRef ctx, JSObjectRef args, const JSV
     return utils::make_object(ctx, "Object", std::unordered_map<std::string, JSValueRef>());
 }
 
-JSObjectRef methods::ReadFileFunction(JSContextRef ctx, JSObjectRef args, const JSValueRef *arguments) {
-    JSValueRef str = JSObjectGetProperty(ctx, args, *SafeJSString("message"), nullptr);
+JSObjectRef methods::ReadFileSyncFunction(JSContextRef ctx, JSObjectRef args, const JSValueRef *arguments) {
+    JSValueRef str = JSObjectGetProperty(ctx, args, *SafeJSString("path"), nullptr);
 
     std::string buf = "resources/" + utils::JSStringToStdString(ctx, str);
-
     std::fstream fs(buf.c_str());
     if (fs.is_open()) {
         std::stringstream ss;
         ss << fs.rdbuf();
         fs.close();
-        std::string all(ss.str());
+
+        size_t contentLen = ss.str().size();
+        char* content = new char[contentLen];
+        memcpy(content, ss.str().c_str(), contentLen);
+
+        std::cout << "[Debug] make ptr " << reinterpret_cast<uint64_t>(content) << std::endl;
 
         std::unordered_map<std::string, JSValueRef> res;
-        SafeJSString data(all.c_str());
-        res["data"] = JSValueMakeString(ctx, *data);
+        res["data"] = JSObjectMakeArrayBufferWithBytesNoCopy(
+                ctx, content, contentLen,
+                [](void* ptr, void* _ctx) -> void {
+                    std::cout << "[Debug] free ptr " << reinterpret_cast<uint64_t>(ptr) << std::endl;
+                    delete[] reinterpret_cast<char*>(ptr);
+                    }, nullptr, nullptr);
+
         JSObjectRef messageObject = utils::make_object(ctx, "Object", res);
         return messageObject;
     }

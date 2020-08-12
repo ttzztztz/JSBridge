@@ -5,7 +5,7 @@ typedef std::function<JSObjectRef(JSContextRef, JSObjectRef, const JSValueRef *a
 std::unordered_map<std::string, JSBridgeMethod> functions = {
         {std::string{"StdinSync"}, methods::StdinSyncFunction},
         {std::string{"Stdin"}, methods::StdinFunction},
-//        {std::string{"ReadFile"}, methods::ReadFileFunction}
+        {std::string{"ReadFileSync"}, methods::ReadFileSyncFunction}
 };
 
 JSObjectRef utils::make_object(JSContextRef ctx, const std::string &className,

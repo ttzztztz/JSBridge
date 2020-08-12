@@ -9,7 +9,12 @@ const Rabbit = {
     Stdin(message: string, cb: (args: {data: string}) => void) {
       return invoke('Stdin', {
         message
-      }, cb)
+      }, cb);
+    },
+    ReadFileSync(fileName: string) : { data: ArrayBuffer } {
+        return invoke('ReadFileSync', {
+            path: fileName
+        });
     }
   };
 
