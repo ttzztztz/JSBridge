@@ -35,9 +35,12 @@ void executeLoop() {
                         "onLaunch",
                         methods::launchEvent(engineContext.globalContext, time(nullptr)));
 
+
     taskQueue.push([&]() -> void {
         utils::evaluateScriptsFromFile(engineContext.globalContext,
                                        "./javascript/main.js");
+
+        JSGarbageCollect(engineContext.globalContext);
     });
 
     while (true) {

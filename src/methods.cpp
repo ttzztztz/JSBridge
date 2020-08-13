@@ -60,20 +60,22 @@ JSObjectRef methods::ReadFileSyncFunction(JSContextRef ctx, JSObjectRef args, co
         std::stringstream ss;
         ss << fs.rdbuf();
         fs.close();
-
         size_t contentLen = ss.str().size();
+
+        // This will cause a memory leak currently because we don't know the time when the object was GC
         char* content = new char[contentLen];
         memcpy(content, ss.str().c_str(), contentLen);
 
         std::cout << "[Debug] make ptr " << reinterpret_cast<uint64_t>(content) << std::endl;
 
         std::unordered_map<std::string, JSValueRef> res;
+        // https://github.com/WebKit/webkit/blob/950143da027e80924b4bb86defa8a3f21fd3fb1e/Source/JavaScriptCore/API/JSTypedArray.cpp#L172
+//        res["data"] = JSObjectMakeArrayBufferWithBytesNoCopy(
+//                ctx, reinterpret_cast<void*>(ss.str().data()), contentLen,
+//                nullptr, nullptr, nullptr);
         res["data"] = JSObjectMakeArrayBufferWithBytesNoCopy(
-                ctx, content, contentLen,
-                [](void* ptr, void* _ctx) -> void {
-                    std::cout << "[Debug] free ptr " << reinterpret_cast<uint64_t>(ptr) << std::endl;
-                    delete[] reinterpret_cast<char*>(ptr);
-                    }, nullptr, nullptr);
+                ctx, reinterpret_cast<void*>(content), contentLen,
+                nullptr, nullptr, nullptr);
 
         JSObjectRef messageObject = utils::make_object(ctx, "Object", res);
         return messageObject;
