@@ -62,20 +62,17 @@ JSObjectRef methods::ReadFileSyncFunction(JSContextRef ctx, JSObjectRef args, co
         fs.close();
         size_t contentLen = ss.str().size();
 
-        // This will cause a memory leak currently because we don't know the time when the object was GC
         char* content = new char[contentLen];
         memcpy(content, ss.str().c_str(), contentLen);
 
-        std::cout << "[Debug] make ptr " << reinterpret_cast<uint64_t>(content) << std::endl;
-
         std::unordered_map<std::string, JSValueRef> res;
         // https://github.com/WebKit/webkit/blob/950143da027e80924b4bb86defa8a3f21fd3fb1e/Source/JavaScriptCore/API/JSTypedArray.cpp#L172
-//        res["data"] = JSObjectMakeArrayBufferWithBytesNoCopy(
-//                ctx, reinterpret_cast<void*>(ss.str().data()), contentLen,
-//                nullptr, nullptr, nullptr);
         res["data"] = JSObjectMakeArrayBufferWithBytesNoCopy(
                 ctx, reinterpret_cast<void*>(content), contentLen,
-                nullptr, nullptr, nullptr);
+                [](void* ptr, void* _ctx) -> void {
+                    std::cout << "removed " << std::endl;
+                    delete[] reinterpret_cast<char*>(ptr);
+                }, nullptr, nullptr);
 
         JSObjectRef messageObject = utils::make_object(ctx, "Object", res);
         return messageObject;
@@ -93,4 +90,44 @@ JSObjectRef methods::launchEvent(JSContextRef ctx, time_t timestamp) {
     JSObjectRef messageObject = utils::make_object(ctx, "Object", res);
 
     return messageObject;
+}
+
+JSObjectRef methods::ReadFileFunction(JSContextRef ctx, JSObjectRef args, const JSValueRef *arguments) {
+    const auto callbackId = arguments[2];
+    JSValueRef _path = JSObjectGetProperty(ctx, args, *SafeJSString("path"), nullptr);
+    std::string path = utils::JSStringToStdString(ctx, _path);
+
+    std::thread t([=]() -> void {
+        std::string buf = "resources/" + path;
+        std::fstream fs(buf.c_str());
+        if (fs.is_open()) {
+            std::stringstream ss;
+            ss << fs.rdbuf();
+            fs.close();
+            size_t contentLen = ss.str().size();
+
+            char* content = new char[contentLen];
+            memcpy(content, ss.str().c_str(), contentLen);
+
+            std::unordered_map<std::string, JSValueRef> res;
+            // https://github.com/WebKit/webkit/blob/950143da027e80924b4bb86defa8a3f21fd3fb1e/Source/JavaScriptCore/API/JSTypedArray.cpp#L172
+            res["data"] = JSObjectMakeArrayBufferWithBytesNoCopy(
+                    ctx, reinterpret_cast<void*>(content), contentLen,
+                    [](void* ptr, void* _ctx) -> void {
+                        std::cout << "removed " << std::endl;
+                        delete[] reinterpret_cast<char*>(ptr);
+                    }, nullptr, nullptr);
+
+            JSObjectRef messageObject = utils::make_object(ctx, "Object", res);
+            utils::callback(ctx, callbackId, messageObject);
+        }
+
+        std::unordered_map<std::string, JSValueRef> res;
+        res["data"] = JSValueMakeUndefined(ctx);
+        JSObjectRef messageObject = utils::make_object(ctx, "Object", res);
+        utils::callback(ctx, callbackId, messageObject);
+    });
+    t.detach();
+
+    return utils::make_object(ctx, "Object", std::unordered_map<std::string, JSValueRef>());
 }
